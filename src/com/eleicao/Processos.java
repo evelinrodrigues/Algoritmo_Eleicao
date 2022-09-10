@@ -13,6 +13,7 @@ public class Processos {
     public static int coordenadorEleito = -1;
     public static List<Integer> IDs = Arrays.asList(6793, 6792, 6791, 6790);
     public static List<Integer> IDsProcessosDisponiveis = Arrays.asList(6793, 6792, 6791, 6790);
+    public static List<Integer> IDsProcessosAtivos = Arrays.asList();
     public static int meuID;
     public static MulticastSocket socket_multicast;
 
@@ -25,7 +26,9 @@ public class Processos {
     */
 
     public static void setMeuID(int indexID){
-        meuID = IDs.get(indexID); 
+        meuID = IDs.get(indexID);
+        //Pode tirar essa chamada e colocar em outro lugar, mas aqui resolve o problema dele precisar entrar como ativo e tirar do disponível 
+        processoEntrou(indexID);
     }
 
     public static void enviaMensagemMulticast(String mensagem){
@@ -41,12 +44,48 @@ public class Processos {
     }
 
     public static void enviaMensagemEntreiGrupo() {
+        
+    }
+    
+    // Função para retirada da lista de IDs Disponíveis e adição à lista de Ativos
+    public static void processoEntrou(int idPossivelmenteNovo){
+        for (int i=0; i<IDsProcessosDisponiveis.size();i++){
+            if (IDsProcessosDisponiveis.get(i) == idPossivelmenteNovo){
+                IDsProcessosDisponiveis.remove(i);
+                IDsProcessosAtivos.add(idPossivelmenteNovo);
+                break;
+            }
+        }
+    }
 
+    // Função para retirada da lista de IDs ativos e adição à lista de Disponíveis
+    public static void processoSaiu(int idDeQuemMorreu){
+        for (int i=0; i<IDsProcessosAtivos.size();i++){
+            if (IDsProcessosAtivos.get(i) == idDeQuemMorreu){
+                IDsProcessosAtivos.remove(i);
+                IDsProcessosDisponiveis.add(idDeQuemMorreu);
+                break;
+            }
+        }
     }
 
     public static void recebeMensagemDeId() {
-
+        while (!IDsProcessosDisponiveis.isEmpty()){
+            try{
+                byte[] buffer = new byte[1000];
+                DatagramPacket messageIn = new DatagramPacket(buffer, buffer.length);
+                socket_multicast.receive(messageIn);
+                Mensagem mensagem = new Mensagem(messageIn.getData());
+                if(mensagem.cod.equals("A") || mensagem.cod.equals("B")){
+                    //Pode ser que ele já anotou que esse entrou, mas essa função cuida desse caso
+                    processoEntrou(mensagem.ID);
+                }
+            }catch(Exception e){
+                System.out.println("Não teve sucesso em esperar pelos IDs\nSocket: " + e.getMessage());
+            }
+        }
     }
+
 
     public static void escutaPedidosEleicao() {
 
