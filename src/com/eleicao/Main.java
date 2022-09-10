@@ -1,19 +1,16 @@
 package com.eleicao;
 import java.net.*;
+import java.io.*;
 
 public class Main {
 
-    public static MulticastSocket socket_multicast;
-    public static int meuID;
-    public static int coordenadorEleito;
-
     public static void main(String[] args) { // primeiro arg é a posição do ID
 	// write your code here
-        inicia(args); 
+        inicia(args[0]); 
         boolean a = true;
         while (a){
-            Processos.começaEleicao();
-            if (meuID == coordenadorEleito){
+            Processos.comecaEleicao();
+            if (Processos.meuID == Processos.coordenadorEleito){
                 Processos.enviaMensagemOlaCoordenador();
             } else{
                 Processos.escutaPedidosEleicao();
@@ -22,16 +19,21 @@ public class Main {
         }
     }
 
-    public static void inicia(String[] args){
-        meuID = Processos.IDs[Integer.parseInt(args[0])]; 
-        // ******** DUVIDA ************//
-        // a classe MulticastSocket já cria um novo socket, então eu chamo a classe ou crio um new MulticastSocket?
+    public static void inicia(String arg){
+        try {
+            InetAddress group = InetAddress.getByName("228.5.6.7");
+            Processos.socket_multicast = new MulticastSocket(6789);
+            Processos.socket_multicast.joinGroup(group);	
+		}catch (SocketException e){System.out.println("Socket: " + e.getMessage());
+		}catch (IOException e){System.out.println("IO: " + e.getMessage());
+		}finally {if(Processos.socket_multicast != null) Processos.socket_multicast.close();}
+        Processos.setMeuID(Integer.parseInt(arg));
         Processos.enviaMensagemEntreiGrupo();
         Processos.recebeMensagemDeId();
-        if(Integer.parseInt(args[0]) == 0){ // é o maior processo
+        if(Integer.parseInt(arg) == 0){
             Processos.enviaMensagemOlaCoordenador();
         } else{
-            coordenadorEleito = Processos.IDs[0];
+            Processos.coordenadorEleito = Processos.IDs.get(0);
             Processos.escutaPedidosEleicao();
             Processos.escutaMensagemOlaCoordenador();
         }
