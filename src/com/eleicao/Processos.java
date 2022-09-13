@@ -87,12 +87,43 @@ public class Processos {
     }
 
 
-    public static void escutaPedidosEleicao() {
-
+    public static void escutaMensagemOlaCoordenador() {
+        while(true)
+        {
+            try{
+                byte[] buffer = new byte[1000];
+                DatagramPacket messageIn = new DatagramPacket(buffer, buffer.length);
+                socket_multicast.setSoTimeout(T3);
+                socket_multicast.receive(messageIn);
+                Mensagem mensagem = new Mensagem(messageIn.getData());
+                if(mensagem.cod.equals("F")) {
+                    return;
+                }
+                System.out.println(mensagem.conteudo);
+            }catch(Exception e){
+                return;
+            }
+        }
     }
 
-    public static void escutaMensagemOlaCoordenador() {
-
+    public static void escutaPedidosEleicao() {
+        try{
+            byte[] buffer = new byte[1000];
+            DatagramPacket messageIn = new DatagramPacket(buffer, buffer.length);
+            socket_multicast.setSoTimeout(T3);
+            socket_multicast.receive(messageIn);
+            Mensagem mensagem = new Mensagem(messageIn.getData());
+            int id = mensagem.ID;
+            if(mensagem.cod.equals("C")) {
+                UDPClient.inicia(meuID + ":D:Estou ativo", id);
+            }
+            else {
+                return;
+            }
+            System.out.println(mensagem.conteudo);
+        }catch(Exception e){
+            return;
+        }
     }
 
     private static int idMaiorIDDisponivel(){
@@ -208,5 +239,21 @@ public class Processos {
             }finally {if(aSocket != null) aSocket.close();}
             return false;
         }
+    }
+}
+
+class EscutaPedidosDeEleicaoThread extends Thread {
+    public void EscutaPedidosDeEleicao() {
+        this.start();
+    }
+    public void run () {
+        try{
+            Processos.escutaPedidosEleicao();
+        }
+        catch(Exception e) {
+            System.out.println("readline:" + e.getMessage());
+        }
+
+
     }
 }

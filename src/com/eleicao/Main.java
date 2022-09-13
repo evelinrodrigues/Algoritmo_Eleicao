@@ -13,7 +13,8 @@ public class Main {
             if (Processos.meuID == Processos.coordenadorEleito){
                 Processos.enviaMensagemOlaCoordenador();
             } else{
-                Processos.escutaPedidosEleicao();
+                EscutaPedidosDeEleicaoThread escutaEleicao = new EscutaPedidosDeEleicaoThread();
+                escutaEleicao.run();
                 Processos.escutaMensagemOlaCoordenador();
             }
         }
@@ -34,7 +35,8 @@ public class Main {
             Processos.enviaMensagemOlaCoordenador();
         } else{
             Processos.coordenadorEleito = Processos.IDs.get(0);
-            Processos.escutaPedidosEleicao();
+            EscutaPedidosDeEleicaoThread escutaEleicao = new EscutaPedidosDeEleicaoThread();
+            escutaEleicao.run();
             Processos.escutaMensagemOlaCoordenador();
         }
 
